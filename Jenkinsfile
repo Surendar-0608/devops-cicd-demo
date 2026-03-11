@@ -1,5 +1,10 @@
 pipeline {
-    agent any
+    agent {
+        docker {
+            image 'python:3.9'
+            args '-u root --network devops-network'
+        }
+    }
 
     environment {
         IMAGE_NAME = "surendar0608/devops-cicd-demo"
@@ -16,7 +21,7 @@ pipeline {
         stage('Install Dependencies') {
             steps {
                 sh '''
-                pip install pytest
+                pip install -r requirements.txt
                 '''
             }
         }
@@ -42,7 +47,7 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 sh '''
-                docker build -t surendar0608/devops-cicd-demo .
+                docker build -t $IMAGE_NAME .
                 '''
             }
         }
@@ -55,7 +60,7 @@ pipeline {
 
                     sh '''
                     docker login -u $DOCKER_USER -p $DOCKER_PASS
-                    docker push surendar0608/devops-cicd-demo
+                    docker push $IMAGE_NAME
                     '''
                 }
             }
@@ -66,7 +71,7 @@ pipeline {
                 sh '''
                 docker stop devops-app || true
                 docker rm devops-app || true
-                docker run -d -p 5000:5000 --name devops-app surendar0608/devops-cicd-demo
+                docker run -d -p 5000:5000 --name devops-app $IMAGE_NAME
                 '''
             }
         }
