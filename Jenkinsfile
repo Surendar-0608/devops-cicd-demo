@@ -34,17 +34,22 @@ pipeline {
             }
         }
 
-        stage('SonarQube Analysis') {
-            steps {
-		script {
-            		def scannerHome = tool 'sonar-scanner'
-            		withSonarQubeEnv('SonarQube') {
-                	sh "${scannerHome}/bin/sonar-scanner"
-            		}
-                }
+stage('SonarQube Analysis') {
+    steps {
+        script {
+            def scannerHome = tool 'sonar-scanner'
+            withSonarQubeEnv('SonarQube') {
+                sh '''
+                apt-get update
+                apt-get install -y openjdk-17-jre
+                export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+                export PATH=$JAVA_HOME/bin:$PATH
+                ${scannerHome}/bin/sonar-scanner
+                '''
             }
         }
-
+    }
+}
         stage('Build Docker Image') {
             steps {
                 sh '''
